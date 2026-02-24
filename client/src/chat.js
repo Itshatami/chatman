@@ -58,5 +58,74 @@ export function renderChat(container) {
 }
 
 function attachConversationClick() {
-    
+  document.querySelectorAll("conversation-item").forEach((item) => {
+    item.onclick = () => {
+      const conversationId = item.dataset.id;
+      openConversation(conversationId);
+    };
+  });
+}
+
+async function openConversation(conversationId) {
+  const res = await api.get(`/api/messages/${conversationId}`);
+
+  const messagesDiv = document.getElementById("messages");
+
+  messagesDiv.innerHTML = res.data
+    .map(
+      (msg) =>
+        `
+        <div>
+      <strong>${msg.sender.username}:</strong>
+      ${msg.content}
+    </div>
+        `
+    )
+    .join("");
+}
+
+// search logic
+document.getElementById("searchBtn").onclick = async () => {
+  const value = document.getElementById("search").value;
+  if (!value) return;
+
+  const res = await api.get(`/api/search?q=${value}`);
+
+  const sidebar = document.getElementById("sidebar");
+  if (res.data.length === 0) {
+    sidebar.innerHTML = "<li class='list-group-item'>No users found</li>";
+    return;
+  }
+
+  sidebar.innerHTML = res.data
+    .map(
+      (user) => `
+         <li 
+      class="list-group-item list-group-item-action user-result"
+      data-id="${user._id}"
+      style="cursor:pointer"
+    >
+      ${user.username}
+    </li>
+    `
+    )
+    .join("");
+
+  attachUserClick();
+};
+
+// when click a user open chat
+function attachUserClick() {
+  document.querySelectorAll("user-result").forEach((item) => {
+    item.onclick = async () => {
+      const otherUserId = item.dataset.id;
+
+      // Ask server to get/create conversation
+      const res = await api.post("/conversations", {
+        userId: otherUserId,
+      });
+
+      openConversation(res.data._id);
+    };
+  });
 }
