@@ -27,48 +27,81 @@ export function renderChat(container) {
     `;
 
   async function loadConversation() {
-    const res = await api.get("/api/convesations");
+    const res = await api.get("/conversations");
+    console.log(res);
 
     const sidebar = document.getElementById("sidebar");
 
-    if (res.data.length === 0) {
+    if (res.data.conversations.length === 0) {
       sidebar.innerHTML = "<li class='list-group-item'>No conversations yet</li>";
+    } else {
+      sidebar.innerHTML = res.data
+        .map((conv) => {
+          const otherUser = conv.participants.find((p) => p._id !== JSON.parse(localStorage.getItem("user")).id);
+          const lastMessage = conv.lastMessage?.content;
+
+          return `
+        <li 
+          class="list-group-item list-group-item-action conversation-item"
+          data-id="${conv._id}"
+          style="cursor:pointer"
+        >
+          <strong>${otherUser.username}</strong>
+          <br/>
+          <small class="text-muted">${lastMessage}</small>
+        </li>
+      `;
+        })
+        .join("");
+    }
+  }
+  loadConversation();
+  attachConversationClick();
+
+  // search logic
+  document.getElementById("searchBtn").onclick = async () => {
+    const value = document.getElementById("search").value;
+    if (!value) return "";
+
+    const res = await api.get(`/search?username=${value}`);
+
+    const sidebar = document.getElementById("sidebar");
+    if (res.data.length === 0) {
+      sidebar.innerHTML = "<li class='list-group-item'>No users found</li>";
+      return;
     }
 
-    sidebar.innerHTML = res.data
-      .map((conv) => {
-        const otherUser = conv.participants.find((p) => p._id !== JSON.parse(localStorage.getItem("user")).id);
-        const lastMessage = conv.lastMessage?.content;
-
-        return `
-      <li 
-        class="list-group-item list-group-item-action conversation-item"
-        data-id="${conv._id}"
-        style="cursor:pointer"
-      >
-        <strong>${otherUser.username}</strong>
-        <br/>
-        <small class="text-muted">${lastMessage}</small>
-      </li>
+    sidebar.innerHTML = `
+         <li 
+      class="list-group-item list-group-item-action user-result"
+      data-id="${res.data.user._id}"
+      style="cursor:pointer"
+    >
+      ${res.data.user.username}
+    </li>
     `;
-      })
-      .join("");
-  }
-  attachConversationClick();
+
+    attachUserClick();
+  };
 }
 
 function attachConversationClick() {
-  document.querySelectorAll("conversation-item").forEach((item) => {
+  document.querySelector(".conversation-item").forEach((item) => {
     item.onclick = () => {
       const conversationId = item.dataset.id;
+      console.log("conversationId", conversationId);
+
       openConversation(conversationId);
     };
   });
 }
 
 async function openConversation(conversationId) {
-  const res = await api.get(`/api/messages/${conversationId}`);
-
+  console.log("conversationId-> ", conversationId);
+  
+  const res = await api.get(`/messages/${conversationId}`);
+  console.log(res.data);
+  
   const messagesDiv = document.getElementById("messages");
 
   messagesDiv.innerHTML = res.data
@@ -84,48 +117,19 @@ async function openConversation(conversationId) {
     .join("");
 }
 
-// search logic
-document.getElementById("searchBtn").onclick = async () => {
-  const value = document.getElementById("search").value;
-  if (!value) return;
-
-  const res = await api.get(`/api/search?q=${value}`);
-
-  const sidebar = document.getElementById("sidebar");
-  if (res.data.length === 0) {
-    sidebar.innerHTML = "<li class='list-group-item'>No users found</li>";
-    return;
-  }
-
-  sidebar.innerHTML = res.data
-    .map(
-      (user) => `
-         <li 
-      class="list-group-item list-group-item-action user-result"
-      data-id="${user._id}"
-      style="cursor:pointer"
-    >
-      ${user.username}
-    </li>
-    `
-    )
-    .join("");
-
-  attachUserClick();
-};
-
 // when click a user open chat
 function attachUserClick() {
-  document.querySelectorAll("user-result").forEach((item) => {
-    item.onclick = async () => {
-      const otherUserId = item.dataset.id;
+  document.querySelector(".user-result").onclick = async () => {
+    const otherUserId = document.querySelector(".user-result").dataset.id;
+    console.log("other user id-> ", otherUserId);
 
-      // Ask server to get/create conversation
-      const res = await api.post("/conversations", {
-        userId: otherUserId,
-      });
+    // Ask server to get/create conversation
+    const res = await api.post("/conversations", {
+      otherUserId,
+    });
 
-      openConversation(res.data._id);
-    };
-  });
+    console.log(res.data);
+
+    openConversation(res.data.id);
+  };
 }

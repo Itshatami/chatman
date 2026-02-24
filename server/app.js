@@ -4,6 +4,7 @@ import conversationRouter from "./src/routes/conversation.routes.js";
 import messageRouter from "./src/routes/message.routes.js";
 import authRouter from "./src/routes/auth.routes.js";
 import auth from "./src/middleware/auth.middleware.js";
+import userRouter from "./src/routes/user.routes.js";
 
 const app = express();
 
@@ -18,6 +19,8 @@ app.use(cors());
 app.use("/api/auth", authRouter);
 app.use("/api/conversations", conversationRouter);
 app.use("/api/messages", messageRouter);
+app.use("/api/search", userRouter);
+
 app.get("/check", auth, (req, res) => {
   return res.json({ message: "authentication successful", user: req.user });
 });

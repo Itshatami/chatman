@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 
 export const authentication = async (req, res, next) => {
   const { username, password } = req.body;
+  console.log(req.body);
 
   // check username exists
   let user = await UserModel.findOne({ username });
@@ -14,5 +15,5 @@ export const authentication = async (req, res, next) => {
     expiresIn: "1d",
   });
 
-  return res.json({ message: "authentication successful", token });
+  return res.json({ message: "authentication successful", token, user });
 };

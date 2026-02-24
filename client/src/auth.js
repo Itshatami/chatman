@@ -15,16 +15,19 @@ export function renderLogin(container) {
       </div>
     </div>`;
 
-  document.getElementById("btn").onchange(async () => {
+  document.getElementById("btn").onclick = async () => {
     const username = document.getElementById("username").value;
-    const password = document.getElementById("password").value;
+    const password = document.getElementById("password").value;    
 
     const res = await api.post("/auth", { username, password });
+    console.log(res);
+    
+
     localStorage.setItem("token", res.data.token);
     localStorage.setItem("user", JSON.stringify(res.data.user));
 
     if (!localStorage.getItem("token")) window.location.hash = "#/login";
 
     window.location.hash = "#/chat";
-  });
+  };
 }
