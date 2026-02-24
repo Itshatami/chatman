@@ -1,4 +1,5 @@
 import { Server } from "socket.io";
+import jwt from "jsonwebtoken";
 
 const socketConnection = (httpServer) => {
   const io = new Server(httpServer, {
@@ -7,13 +8,16 @@ const socketConnection = (httpServer) => {
     },
   });
 
-  //   io.use((socket, next) => {
-  //     if (!token) {
-  //       //   code
-  //     } else {
-  //       next();
-  //     }
-  //   });
+  io.use((socket, next) => {
+    try {
+      const token = socket.handshake.auth.token;
+      const decode = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      socket.user = decode;
+      next();
+    } catch (error) {
+      next(new Error("unauthorized"));
+    }
+  });
 
   return io;
 };
