@@ -3,10 +3,11 @@ import jwt from "jsonwebtoken";
 
 export const authentication = async (req, res, next) => {
   const { username, password } = req.body;
-  console.log(req.body);
 
   // check username exists
   let user = await UserModel.findOne({ username });
+  if(user?.password !== password) return res.status(400).json({message:"incorrect password"})
+
   if (!user) {
     user = await UserModel.create({ username, password });
   }
