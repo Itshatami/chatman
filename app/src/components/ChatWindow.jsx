@@ -1,14 +1,16 @@
 import { useEffect, useState } from "react";
 import api from "../api";
+import { useAuth } from "../context/AuthContext";
 
 export default function ChatWindow({ conversation }) {
   const [messages, setMessages] = useState([]);
+  const {token } = useAuth() 
 
   useEffect(() => {
     if (!conversation?._id) return;
 
     const loadMessages = async () => {
-      const res = await api.get(`/messages/${conversation._id}`);
+      const res = await api.get(`/messages/${conversation._id}` , {headers:{Authorization:`Bearer ${token}`}});
       setMessages(res.data);
     };
     loadMessages();

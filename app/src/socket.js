@@ -1,9 +1,17 @@
 import { io } from "socket.io-client";
 
-export function connectSocket() {
-  const token = localStorage.getItem("token");
+let socket = null;
 
-  return io("http://localhost:5001", {
-    auth: { token }
-  });
+export function connectSocket(token) {
+  if (!socket) {
+    socket = io("http://localhost:5001", {
+      auth: { token }
+    });
+  }
+
+  return socket;
+}
+
+export function getSocket() {
+  return socket;
 }

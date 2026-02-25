@@ -6,11 +6,14 @@ export const authentication = async (req, res, next) => {
 
   // check username exists
   let user = await UserModel.findOne({ username });
-  if(user?.password !== password) return res.status(400).json({message:"incorrect password"})
-
-  if (!user) {
+  if (user) {
+    if (user.password !== password) {
+      return res.status(400).json({ message: "incorrect password" });
+    }
+  } else {
     user = await UserModel.create({ username, password });
   }
+
   // token
   const token = jwt.sign({ user: { id: user._id, username: user.username } }, process.env.JWT_SECRET_KEY, {
     expiresIn: "1d",
