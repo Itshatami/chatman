@@ -12,7 +12,7 @@ const socketConnection = (httpServer) => {
     try {
       const token = socket.handshake.auth.token;
       const decode = jwt.verify(token, process.env.JWT_SECRET_KEY);
-      socket.user = decode;
+      socket.user = decode.user;
       next();
     } catch (error) {
       next(new Error("unauthorized"));
